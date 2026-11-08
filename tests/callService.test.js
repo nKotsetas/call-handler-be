@@ -122,3 +122,20 @@ describe('addNote', () => {
     assert.throws(() => service.addNote('1', '   '), { name: 'ValidationError' });
   });
 });
+
+describe('deleteCall', () => {
+  it('removes the call and returns true', () => {
+    assert.equal(service.deleteCall('1'), true);
+    assert.equal(service.getCallById('1'), null);
+  });
+
+  it('also removes the notes of the call', () => {
+    service.deleteCall('1');
+    assert.ok(!db.notes.some((note) => note.call_id === '1'));
+    assert.equal(db.notes.length, 5);
+  });
+
+  it('returns false if the call does not exist', () => {
+    assert.equal(service.deleteCall('999'), false);
+  });
+});

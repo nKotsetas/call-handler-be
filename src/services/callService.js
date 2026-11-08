@@ -43,9 +43,17 @@ export function createCallService(db = createDatabase()) {
     return notes.insert(note);
   }
 
-  return { getAllCalls, getCallById, archiveCall, unarchiveCall, addNote };
+  function deleteCall(id) {
+    const deleted = calls.remove(id);
+    if (deleted) notes.removeByCallId(id);
+
+    return deleted;
+  }
+
+  return { getAllCalls, getCallById, archiveCall, unarchiveCall, addNote, deleteCall };
 }
 
 const service = createCallService();
 
-export const { getAllCalls, getCallById, archiveCall, unarchiveCall, addNote } = service;
+export const { getAllCalls, getCallById, archiveCall, unarchiveCall, addNote, deleteCall } =
+  service;
