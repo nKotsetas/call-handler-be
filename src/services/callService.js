@@ -1,6 +1,9 @@
+import { randomUUID } from 'node:crypto';
+import { makeNote } from '../models/note.js';
 import { createDatabase } from '../repositories/database.js';
 import { createCallRepository } from '../repositories/callRepository.js';
 import { createNoteRepository } from '../repositories/noteRepository.js';
+import { ValidationError, validateNoteContent } from '../validation/callValidator.js';
 
 const newestFirst = (a, b) => new Date(b.created_at) - new Date(a.created_at);
 
@@ -30,9 +33,19 @@ export function createCallService(db = createDatabase()) {
     return calls.update(id, { is_archived: false });
   }
 
-  return { getAllCalls, getCallById, archiveCall, unarchiveCall };
+  function addNote(callId, content) {
+    const { valid, errors } = validateNoteContent(content);
+    if (!valid) throw new ValidationError(errors);
+
+    if (!calls.findById(callId)) return null;
+
+    const note = makeNote({ id: `note-${randomUUID()}`, call_id: callId, content: content.trim() });
+    return notes.insert(note);
+  }
+
+  return { getAllCalls, getCallById, archiveCall, unarchiveCall, addNote };
 }
 
 const service = createCallService();
 
-export const { getAllCalls, getCallById, archiveCall, unarchiveCall } = service;
+export const { getAllCalls, getCallById, archiveCall, unarchiveCall, addNote } = service;

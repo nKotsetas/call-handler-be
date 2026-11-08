@@ -90,3 +90,35 @@ describe('unarchiveCall', () => {
     assert.equal(service.unarchiveCall('999'), null);
   });
 });
+
+describe('addNote', () => {
+  it('adds a note to the call', () => {
+    const note = service.addNote('2', 'Called back, no answer');
+    assert.equal(note.call_id, '2');
+    assert.equal(note.content, 'Called back, no answer');
+    assert.match(note.id, /^note-/);
+  });
+
+  it('shows the new note in getCallById', () => {
+    const note = service.addNote('1', 'Third note');
+    const { notes } = service.getCallById('1');
+    assert.equal(notes.length, 3);
+    assert.deepEqual(notes.at(-1), note);
+  });
+
+  it('trims the content', () => {
+    assert.equal(service.addNote('1', '  padded  ').content, 'padded');
+  });
+
+  it('gives every note its own id', () => {
+    assert.notEqual(service.addNote('1', 'a').id, service.addNote('1', 'b').id);
+  });
+
+  it('returns null if the call does not exist', () => {
+    assert.equal(service.addNote('999', 'hello'), null);
+  });
+
+  it('throws a ValidationError for empty content', () => {
+    assert.throws(() => service.addNote('1', '   '), { name: 'ValidationError' });
+  });
+});
