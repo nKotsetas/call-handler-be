@@ -174,3 +174,47 @@ describe('getAllCalls with filters', () => {
     assert.throws(() => service.getAllCalls({ call_type: 'busy' }), { name: 'ValidationError' });
   });
 });
+
+describe('createCall', () => {
+  const newCall = {
+    direction: 'inbound',
+    from: '+33 6 00 00 00 01',
+    to: '+33 1 23 45 67 89',
+    call_type: 'answered',
+    duration: 30,
+  };
+
+  it('saves the call with a default id, is_archived and created_at', () => {
+    const call = service.createCall(newCall);
+    assert.ok(call.id);
+    assert.equal(call.is_archived, false);
+    assert.ok(!Number.isNaN(Date.parse(call.created_at)));
+    assert.deepEqual(service.getCallById(call.id), { ...call, notes: [] });
+  });
+
+  it('keeps the id and created_at if they are given', () => {
+    const call = service.createCall({ ...newCall, id: '42', created_at: '2025-05-01T10:00:00Z' });
+    assert.equal(call.id, '42');
+    assert.equal(call.created_at, '2025-05-01T10:00:00.000Z');
+  });
+
+  it('puts the new call first in getAllCalls', () => {
+    const call = service.createCall(newCall);
+    assert.equal(service.getAllCalls()[0].id, call.id);
+  });
+
+  it('ignores fields that are not part of a call', () => {
+    const call = service.createCall({ ...newCall, hacked: true });
+    assert.equal(call.hacked, undefined);
+  });
+
+  it('throws a ValidationError for invalid data', () => {
+    assert.throws(() => service.createCall({ ...newCall, direction: 'up' }), {
+      name: 'ValidationError',
+    });
+  });
+
+  it('throws if the id already exists', () => {
+    assert.throws(() => service.createCall({ ...newCall, id: '1' }), /already exists/);
+  });
+});
