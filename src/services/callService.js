@@ -26,9 +26,13 @@ export function createCallService(db = createDatabase()) {
     return calls.update(id, { is_archived: true });
   }
 
-  return { getAllCalls, getCallById, archiveCall };
+  function unarchiveCall(id) {
+    return calls.update(id, { is_archived: false });
+  }
+
+  return { getAllCalls, getCallById, archiveCall, unarchiveCall };
 }
 
 const service = createCallService();
 
-export const { getAllCalls, getCallById, archiveCall } = service;
+export const { getAllCalls, getCallById, archiveCall, unarchiveCall } = service;

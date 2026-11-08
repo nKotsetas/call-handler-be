@@ -74,3 +74,19 @@ describe('archiveCall', () => {
     assert.equal(service.archiveCall('999'), null);
   });
 });
+
+describe('unarchiveCall', () => {
+  it('sets is_archived back to false', () => {
+    assert.equal(service.unarchiveCall('3').is_archived, false);
+  });
+
+  it('puts the call back in getAllCalls', () => {
+    service.archiveCall('1');
+    service.unarchiveCall('1');
+    assert.ok(service.getAllCalls().some((call) => call.id === '1'));
+  });
+
+  it('returns null if the call does not exist', () => {
+    assert.equal(service.unarchiveCall('999'), null);
+  });
+});
