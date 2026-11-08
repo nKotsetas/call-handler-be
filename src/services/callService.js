@@ -3,7 +3,11 @@ import { makeNote } from '../models/note.js';
 import { createDatabase } from '../repositories/database.js';
 import { createCallRepository } from '../repositories/callRepository.js';
 import { createNoteRepository } from '../repositories/noteRepository.js';
-import { ValidationError, validateNoteContent } from '../validation/callValidator.js';
+import {
+  ValidationError,
+  validateFilters,
+  validateNoteContent,
+} from '../validation/callValidator.js';
 
 const newestFirst = (a, b) => new Date(b.created_at) - new Date(a.created_at);
 
@@ -11,10 +15,17 @@ export function createCallService(db = createDatabase()) {
   const calls = createCallRepository(db);
   const notes = createNoteRepository(db);
 
-  function getAllCalls() {
+  function getAllCalls(filters = {}) {
+    const { valid, errors } = validateFilters(filters);
+    if (!valid) throw new ValidationError(errors);
+
+    const { call_type, direction, is_archived = false } = filters;
+
     return calls
       .findAll()
-      .filter((call) => !call.is_archived)
+      .filter((call) => is_archived === 'all' || call.is_archived === is_archived)
+      .filter((call) => call_type === undefined || call.call_type === call_type)
+      .filter((call) => direction === undefined || call.direction === direction)
       .sort(newestFirst);
   }
 

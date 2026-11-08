@@ -60,6 +60,25 @@ export function validateCall(call) {
   return result(errors);
 }
 
+export function validateFilters(filters) {
+  if (!isObject(filters)) return result(['filters must be an object']);
+
+  const { call_type, direction, is_archived } = filters;
+  const errors = [];
+
+  if (call_type !== undefined && !CALL_TYPES.includes(call_type)) {
+    errors.push(`call_type must be one of: ${CALL_TYPES.join(', ')}`);
+  }
+  if (direction !== undefined && !CALL_DIRECTIONS.includes(direction)) {
+    errors.push(`direction must be one of: ${CALL_DIRECTIONS.join(', ')}`);
+  }
+  if (is_archived !== undefined && typeof is_archived !== 'boolean' && is_archived !== 'all') {
+    errors.push("is_archived must be true, false or 'all'");
+  }
+
+  return result(errors);
+}
+
 export function validateNoteContent(content) {
   if (typeof content !== 'string' || content.trim() === '') {
     return result(['content must be a non-empty string']);

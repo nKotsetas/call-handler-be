@@ -139,3 +139,38 @@ describe('deleteCall', () => {
     assert.equal(service.deleteCall('999'), false);
   });
 });
+
+describe('getAllCalls with filters', () => {
+  const ids = (calls) => calls.map((call) => call.id);
+
+  it('filters by call_type', () => {
+    assert.deepEqual(ids(service.getAllCalls({ call_type: 'missed' })), ['5', '2']);
+  });
+
+  it('filters by direction', () => {
+    const calls = service.getAllCalls({ direction: 'outbound' });
+    assert.equal(calls.length, 4);
+    assert.ok(calls.every((call) => call.direction === 'outbound'));
+  });
+
+  it('returns only archived calls with is_archived true', () => {
+    assert.deepEqual(ids(service.getAllCalls({ is_archived: true })), ['3', '8', '11']);
+  });
+
+  it("returns all calls with is_archived 'all'", () => {
+    assert.equal(service.getAllCalls({ is_archived: 'all' }).length, 12);
+  });
+
+  it('can combine filters', () => {
+    const calls = service.getAllCalls({
+      direction: 'inbound',
+      call_type: 'voicemail',
+      is_archived: 'all',
+    });
+    assert.deepEqual(ids(calls), ['10', '3']);
+  });
+
+  it('throws a ValidationError for a wrong filter value', () => {
+    assert.throws(() => service.getAllCalls({ call_type: 'busy' }), { name: 'ValidationError' });
+  });
+});

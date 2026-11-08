@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { calls } from '../src/data/index.js';
-import { validateCall, validateNoteContent } from '../src/validation/callValidator.js';
+import {
+  validateCall,
+  validateFilters,
+  validateNoteContent,
+} from '../src/validation/callValidator.js';
 
 const validCall = {
   id: '100',
@@ -87,5 +91,21 @@ describe('validateNoteContent', () => {
 
   it('rejects content that is too long', () => {
     assert.equal(validateNoteContent('a'.repeat(1001)).valid, false);
+  });
+});
+
+describe('validateFilters', () => {
+  it('accepts no filters', () => {
+    assert.equal(validateFilters({}).valid, true);
+  });
+
+  it('accepts valid filters', () => {
+    const filters = { call_type: 'missed', direction: 'inbound', is_archived: 'all' };
+    assert.equal(validateFilters(filters).valid, true);
+  });
+
+  it('rejects wrong values', () => {
+    const { errors } = validateFilters({ call_type: 'x', direction: 'y', is_archived: 'z' });
+    assert.equal(errors.length, 3);
   });
 });
