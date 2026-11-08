@@ -51,7 +51,10 @@ describe('validateCall', () => {
 
   it('rejects bad phone numbers', () => {
     const { errors } = validateCall({ ...validCall, from: 'hello', to: 42 });
-    assert.deepEqual(errors, ['from must be a valid phone number', 'to must be a valid phone number']);
+    assert.deepEqual(errors, [
+      'from must be a valid phone number',
+      'to must be a valid phone number',
+    ]);
   });
 
   it('rejects a bad duration', () => {
