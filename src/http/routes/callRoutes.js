@@ -22,6 +22,11 @@ router.get('/', (req, res) => {
   res.json({ calls });
 });
 
+router.post('/', (req, res) => {
+  const call = res.locals.callService.createCall(req.body);
+  res.status(201).json(call);
+});
+
 router.get('/:callId', (req, res) => {
   const call = res.locals.callService.getCallById(req.params.callId);
   if (!call) return callNotFound(res);
@@ -41,6 +46,20 @@ router.patch('/:callId/unarchive', (req, res) => {
   if (!call) return callNotFound(res);
 
   res.json(call);
+});
+
+router.post('/:callId/notes', (req, res) => {
+  const note = res.locals.callService.addNote(req.params.callId, req.body?.content);
+  if (!note) return callNotFound(res);
+
+  res.status(201).json(note);
+});
+
+router.delete('/:callId', (req, res) => {
+  const deleted = res.locals.callService.deleteCall(req.params.callId);
+  if (!deleted) return callNotFound(res);
+
+  res.status(204).end();
 });
 
 export default router;

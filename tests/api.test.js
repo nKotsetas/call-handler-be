@@ -167,3 +167,104 @@ describe('PATCH /calls/:callId/unarchive', () => {
     assert.equal(res.status, 404);
   });
 });
+
+describe('POST /calls/:callId/notes', () => {
+  it('adds a note that shows up in the call details', async () => {
+    const user = newUser();
+    const res = await request('/calls/2/notes', {
+      method: 'POST',
+      user,
+      body: { content: 'Called back, no answer' },
+    });
+    assert.equal(res.status, 201);
+    assert.equal(res.body.call_id, '2');
+
+    const call = await request('/calls/2', { user });
+    assert.deepEqual(call.body.notes, [res.body]);
+  });
+
+  it('returns 400 for empty content', async () => {
+    const res = await request('/calls/2/notes', { method: 'POST', body: { content: '  ' } });
+    assert.equal(res.status, 400);
+    assert.deepEqual(res.body.details, ['content must be a non-empty string']);
+  });
+
+  it('returns 400 without a body', async () => {
+    const res = await request('/calls/2/notes', { method: 'POST' });
+    assert.equal(res.status, 400);
+  });
+
+  it('returns 400 for invalid json', async () => {
+    const res = await request('/calls/2/notes', { method: 'POST', body: '{"content":' });
+    assert.equal(res.status, 400);
+    assert.deepEqual(res.body, { error: 'Request body must be valid JSON' });
+  });
+
+  it('returns 404 if the call does not exist', async () => {
+    const res = await request('/calls/999/notes', { method: 'POST', body: { content: 'hi' } });
+    assert.equal(res.status, 404);
+  });
+});
+
+describe('POST /calls', () => {
+  const newCall = {
+    direction: 'outbound',
+    from: '+33 1 23 45 67 89',
+    to: '+33 6 55 55 55 55',
+    call_type: 'answered',
+    duration: 75,
+  };
+
+  it('creates a call that shows up first in GET /calls', async () => {
+    const user = newUser();
+    const res = await request('/calls', { method: 'POST', user, body: newCall });
+    assert.equal(res.status, 201);
+    assert.equal(res.body.is_archived, false);
+
+    const list = await request('/calls', { user });
+    assert.equal(list.body.calls[0].id, res.body.id);
+  });
+
+  it('returns 400 with all the validation errors', async () => {
+    const res = await request('/calls', {
+      method: 'POST',
+      body: { ...newCall, direction: 'sideways', duration: -1 },
+    });
+    assert.equal(res.status, 400);
+    assert.deepEqual(res.body.details, [
+      'direction must be one of: inbound, outbound',
+      'duration must be a non-negative integer (seconds)',
+    ]);
+  });
+
+  it('returns 400 for an array body', async () => {
+    const res = await request('/calls', { method: 'POST', body: [newCall] });
+    assert.equal(res.status, 400);
+  });
+
+  it('returns 400 without a body', async () => {
+    const res = await request('/calls', { method: 'POST' });
+    assert.equal(res.status, 400);
+  });
+
+  it('returns 400 if the id already exists', async () => {
+    const res = await request('/calls', { method: 'POST', body: { ...newCall, id: '1' } });
+    assert.equal(res.status, 400);
+  });
+});
+
+describe('DELETE /calls/:callId', () => {
+  it('deletes the call', async () => {
+    const user = newUser();
+    const res = await request('/calls/1', { method: 'DELETE', user });
+    assert.equal(res.status, 204);
+
+    const call = await request('/calls/1', { user });
+    assert.equal(call.status, 404);
+  });
+
+  it('returns 404 if the call does not exist', async () => {
+    const res = await request('/calls/999', { method: 'DELETE' });
+    assert.equal(res.status, 404);
+  });
+});
