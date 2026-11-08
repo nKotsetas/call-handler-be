@@ -121,3 +121,49 @@ describe('unknown routes', () => {
     assert.equal(res.status, 404);
   });
 });
+
+describe('GET /calls with filters', () => {
+  it('filters by call_type and direction', async () => {
+    const res = await request('/calls?call_type=missed&direction=inbound');
+    assert.equal(res.status, 200);
+    assert.deepEqual(ids(res.body.calls), ['5']);
+  });
+
+  it('returns archived calls with is_archived=true', async () => {
+    const res = await request('/calls?is_archived=true');
+    assert.deepEqual(ids(res.body.calls), ['3', '8', '11']);
+  });
+
+  it('returns all calls with is_archived=all', async () => {
+    const res = await request('/calls?is_archived=all');
+    assert.equal(res.body.calls.length, 12);
+  });
+
+  it('returns 400 for a wrong filter value', async () => {
+    const res = await request('/calls?call_type=busy');
+    assert.equal(res.status, 400);
+    assert.deepEqual(res.body.details, ['call_type must be one of: answered, missed, voicemail']);
+  });
+
+  it('returns 400 if a filter is given twice', async () => {
+    const res = await request('/calls?direction=inbound&direction=outbound');
+    assert.equal(res.status, 400);
+  });
+});
+
+describe('PATCH /calls/:callId/unarchive', () => {
+  it('puts the call back in GET /calls', async () => {
+    const user = newUser();
+    const res = await request('/calls/3/unarchive', { method: 'PATCH', user });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.is_archived, false);
+
+    const list = await request('/calls', { user });
+    assert.ok(ids(list.body.calls).includes('3'));
+  });
+
+  it('returns 404 if the call does not exist', async () => {
+    const res = await request('/calls/999/unarchive', { method: 'PATCH' });
+    assert.equal(res.status, 404);
+  });
+});
