@@ -1,0 +1,122 @@
+[
+  {
+    "id": "1",
+    "direction": "inbound",
+    "from": "+33 6 12 34 56 78",
+    "to": "+33 1 23 45 67 89",
+    "call_type": "answered",
+    "duration": 120,
+    "is_archived": false,
+    "created_at": "2025-04-10T14:32:00Z"
+  },
+  {
+    "id": "2",
+    "direction": "outbound",
+    "from": "+33 1 23 45 67 89",
+    "to": "+33 6 98 76 54 32",
+    "call_type": "missed",
+    "duration": 0,
+    "is_archived": false,
+    "created_at": "2025-04-10T15:10:00Z"
+  },
+  {
+    "id": "3",
+    "direction": "inbound",
+    "from": "+33 7 55 44 33 22",
+    "to": "+33 1 23 45 67 89",
+    "call_type": "voicemail",
+    "duration": 45,
+    "is_archived": true,
+    "created_at": "2025-04-09T09:15:00Z"
+  },
+  {
+    "id": "4",
+    "direction": "outbound",
+    "from": "+33 1 23 45 67 89",
+    "to": "+33 6 11 22 33 44",
+    "call_type": "answered",
+    "duration": 300,
+    "is_archived": false,
+    "created_at": "2025-04-09T11:45:00Z"
+  },
+  {
+    "id": "5",
+    "direction": "inbound",
+    "from": "+33 6 45 67 89 01",
+    "to": "+33 1 23 45 67 89",
+    "call_type": "missed",
+    "duration": 0,
+    "is_archived": false,
+    "created_at": "2025-04-11T08:05:00Z"
+  },
+  {
+    "id": "6",
+    "direction": "inbound",
+    "from": "+44 20 7946 0958",
+    "to": "+33 1 23 45 67 89",
+    "call_type": "answered",
+    "duration": 845,
+    "is_archived": false,
+    "created_at": "2025-04-11T10:20:00Z"
+  },
+  {
+    "id": "7",
+    "direction": "outbound",
+    "from": "+33 1 23 45 67 89",
+    "to": "+33 7 12 98 34 76",
+    "call_type": "voicemail",
+    "duration": 32,
+    "is_archived": false,
+    "created_at": "2025-04-08T16:40:00Z"
+  },
+  {
+    "id": "8",
+    "direction": "inbound",
+    "from": "+33 6 23 45 12 90",
+    "to": "+33 1 23 45 67 89",
+    "call_type": "answered",
+    "duration": 62,
+    "is_archived": true,
+    "created_at": "2025-04-07T13:00:00Z"
+  },
+  {
+    "id": "9",
+    "direction": "outbound",
+    "from": "+33 1 23 45 67 89",
+    "to": "+49 30 901820",
+    "call_type": "answered",
+    "duration": 1520,
+    "is_archived": false,
+    "created_at": "2025-04-12T09:30:00Z"
+  },
+  {
+    "id": "10",
+    "direction": "inbound",
+    "from": "+33 7 88 77 66 55",
+    "to": "+33 1 23 45 67 89",
+    "call_type": "voicemail",
+    "duration": 78,
+    "is_archived": false,
+    "created_at": "2025-04-12T18:55:00Z"
+  },
+  {
+    "id": "11",
+    "direction": "outbound",
+    "from": "+33 1 23 45 67 89",
+    "to": "+33 6 34 56 78 90",
+    "call_type": "missed",
+    "duration": 0,
+    "is_archived": true,
+    "created_at": "2025-04-06T12:10:00Z"
+  },
+  {
+    "id": "12",
+    "direction": "inbound",
+    "from": "+1 415 555 0132",
+    "to": "+33 1 23 45 67 89",
+    "call_type": "answered",
+    "duration": 410,
+    "is_archived": false,
+    "created_at": "2025-04-13T07:45:00Z"
+  }
+]

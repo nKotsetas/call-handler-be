@@ -1,0 +1,37 @@
+[
+  {
+    "id": "note-1",
+    "call_id": "3",
+    "content": "Customer left a message about their invoice"
+  },
+  {
+    "id": "note-2",
+    "call_id": "1",
+    "content": "Customer asked about the pricing plans"
+  },
+  {
+    "id": "note-3",
+    "call_id": "1",
+    "content": "Sent the pricing PDF by email after the call"
+  },
+  {
+    "id": "note-4",
+    "call_id": "4",
+    "content": "Follow-up on the onboarding, client is happy so far"
+  },
+  {
+    "id": "note-5",
+    "call_id": "6",
+    "content": "UK partner, discussed the Q2 contract renewal"
+  },
+  {
+    "id": "note-6",
+    "call_id": "9",
+    "content": "Long technical call about the API integration"
+  },
+  {
+    "id": "note-7",
+    "call_id": "10",
+    "content": "Voicemail: wants a callback before Friday"
+  }
+]
