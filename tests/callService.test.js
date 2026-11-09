@@ -1,0 +1,220 @@
+import assert from 'node:assert/strict';
+import { beforeEach, describe, it } from 'node:test';
+import { createDatabase } from '../src/repositories/database.js';
+import { createCallService } from '../src/services/callService.js';
+
+let db;
+let service;
+
+beforeEach(() => {
+  db = createDatabase();
+  service = createCallService(db);
+});
+
+describe('getAllCalls', () => {
+  it('returns only calls that are not archived', () => {
+    const calls = service.getAllCalls();
+    assert.equal(calls.length, 9);
+    assert.ok(calls.every((call) => !call.is_archived));
+  });
+
+  it('returns the newest calls first', () => {
+    const ids = service.getAllCalls().map((call) => call.id);
+    assert.deepEqual(ids, ['12', '10', '9', '6', '5', '2', '1', '4', '7']);
+  });
+
+  it('returns copies so the store can not be changed from outside', () => {
+    const [first] = service.getAllCalls();
+    first.is_archived = true;
+    assert.equal(service.getCallById(first.id).is_archived, false);
+  });
+});
+
+describe('getCallById', () => {
+  it('returns the call with its notes', () => {
+    const call = service.getCallById('1');
+    assert.equal(call.id, '1');
+    assert.deepEqual(
+      call.notes.map((note) => note.id),
+      ['note-2', 'note-3'],
+    );
+  });
+
+  it('returns an empty notes array if the call has no notes', () => {
+    assert.deepEqual(service.getCallById('2').notes, []);
+  });
+
+  it('also finds archived calls', () => {
+    assert.equal(service.getCallById('3').is_archived, true);
+  });
+
+  it('returns null if the call does not exist', () => {
+    assert.equal(service.getCallById('999'), null);
+  });
+});
+
+describe('archiveCall', () => {
+  it('sets is_archived to true and returns the call', () => {
+    const call = service.archiveCall('1');
+    assert.equal(call.id, '1');
+    assert.equal(call.is_archived, true);
+  });
+
+  it('removes the call from getAllCalls', () => {
+    service.archiveCall('1');
+    assert.ok(!service.getAllCalls().some((call) => call.id === '1'));
+  });
+
+  it('does not change the other fields', () => {
+    const { notes: _notes, ...before } = service.getCallById('1');
+    assert.deepEqual(service.archiveCall('1'), { ...before, is_archived: true });
+  });
+
+  it('returns null if the call does not exist', () => {
+    assert.equal(service.archiveCall('999'), null);
+  });
+});
+
+describe('unarchiveCall', () => {
+  it('sets is_archived back to false', () => {
+    assert.equal(service.unarchiveCall('3').is_archived, false);
+  });
+
+  it('puts the call back in getAllCalls', () => {
+    service.archiveCall('1');
+    service.unarchiveCall('1');
+    assert.ok(service.getAllCalls().some((call) => call.id === '1'));
+  });
+
+  it('returns null if the call does not exist', () => {
+    assert.equal(service.unarchiveCall('999'), null);
+  });
+});
+
+describe('addNote', () => {
+  it('adds a note to the call', () => {
+    const note = service.addNote('2', 'Called back, no answer');
+    assert.equal(note.call_id, '2');
+    assert.equal(note.content, 'Called back, no answer');
+    assert.match(note.id, /^note-/);
+  });
+
+  it('shows the new note in getCallById', () => {
+    const note = service.addNote('1', 'Third note');
+    const { notes } = service.getCallById('1');
+    assert.equal(notes.length, 3);
+    assert.deepEqual(notes.at(-1), note);
+  });
+
+  it('trims the content', () => {
+    assert.equal(service.addNote('1', '  padded  ').content, 'padded');
+  });
+
+  it('gives every note its own id', () => {
+    assert.notEqual(service.addNote('1', 'a').id, service.addNote('1', 'b').id);
+  });
+
+  it('returns null if the call does not exist', () => {
+    assert.equal(service.addNote('999', 'hello'), null);
+  });
+
+  it('throws a ValidationError for empty content', () => {
+    assert.throws(() => service.addNote('1', '   '), { name: 'ValidationError' });
+  });
+});
+
+describe('deleteCall', () => {
+  it('removes the call and returns true', () => {
+    assert.equal(service.deleteCall('1'), true);
+    assert.equal(service.getCallById('1'), null);
+  });
+
+  it('also removes the notes of the call', () => {
+    service.deleteCall('1');
+    assert.ok(!db.notes.some((note) => note.call_id === '1'));
+    assert.equal(db.notes.length, 5);
+  });
+
+  it('returns false if the call does not exist', () => {
+    assert.equal(service.deleteCall('999'), false);
+  });
+});
+
+describe('getAllCalls with filters', () => {
+  const ids = (calls) => calls.map((call) => call.id);
+
+  it('filters by call_type', () => {
+    assert.deepEqual(ids(service.getAllCalls({ call_type: 'missed' })), ['5', '2']);
+  });
+
+  it('filters by direction', () => {
+    const calls = service.getAllCalls({ direction: 'outbound' });
+    assert.equal(calls.length, 4);
+    assert.ok(calls.every((call) => call.direction === 'outbound'));
+  });
+
+  it('returns only archived calls with is_archived true', () => {
+    assert.deepEqual(ids(service.getAllCalls({ is_archived: true })), ['3', '8', '11']);
+  });
+
+  it("returns all calls with is_archived 'all'", () => {
+    assert.equal(service.getAllCalls({ is_archived: 'all' }).length, 12);
+  });
+
+  it('can combine filters', () => {
+    const calls = service.getAllCalls({
+      direction: 'inbound',
+      call_type: 'voicemail',
+      is_archived: 'all',
+    });
+    assert.deepEqual(ids(calls), ['10', '3']);
+  });
+
+  it('throws a ValidationError for a wrong filter value', () => {
+    assert.throws(() => service.getAllCalls({ call_type: 'busy' }), { name: 'ValidationError' });
+  });
+});
+
+describe('createCall', () => {
+  const newCall = {
+    direction: 'inbound',
+    from: '+33 6 00 00 00 01',
+    to: '+33 1 23 45 67 89',
+    call_type: 'answered',
+    duration: 30,
+  };
+
+  it('saves the call with a default id, is_archived and created_at', () => {
+    const call = service.createCall(newCall);
+    assert.ok(call.id);
+    assert.equal(call.is_archived, false);
+    assert.ok(!Number.isNaN(Date.parse(call.created_at)));
+    assert.deepEqual(service.getCallById(call.id), { ...call, notes: [] });
+  });
+
+  it('keeps the id and created_at if they are given', () => {
+    const call = service.createCall({ ...newCall, id: '42', created_at: '2025-05-01T10:00:00Z' });
+    assert.equal(call.id, '42');
+    assert.equal(call.created_at, '2025-05-01T10:00:00.000Z');
+  });
+
+  it('puts the new call first in getAllCalls', () => {
+    const call = service.createCall(newCall);
+    assert.equal(service.getAllCalls()[0].id, call.id);
+  });
+
+  it('ignores fields that are not part of a call', () => {
+    const call = service.createCall({ ...newCall, hacked: true });
+    assert.equal(call.hacked, undefined);
+  });
+
+  it('throws a ValidationError for invalid data', () => {
+    assert.throws(() => service.createCall({ ...newCall, direction: 'up' }), {
+      name: 'ValidationError',
+    });
+  });
+
+  it('throws if the id already exists', () => {
+    assert.throws(() => service.createCall({ ...newCall, id: '1' }), /already exists/);
+  });
+});
